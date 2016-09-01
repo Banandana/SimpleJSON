@@ -1,3 +1,11 @@
+Removing all wide character string variables and stripping repo of everything except source code.
+
+Porting to the psvita.
+
+Original Author: MJPA
+
+ - Banandana
+
 About
 -----
 
