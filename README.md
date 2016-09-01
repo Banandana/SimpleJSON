@@ -1,6 +1,15 @@
-Removing all wide character string variables and stripping repo of everything except source code.
+Vita library version of SimpleJSON.
 
-Porting to the psvita.
+Changes made from MJPA's repository:
+ - Removed all wide chars and wide char strings
+ - Modified makefile to create an installable static library
+
+make
+make install
+
+-lsimpleJSON to your project as well as the includes
+
+#include <SimpleJSON/JSON.h>
 
 Original Author: MJPA
 
