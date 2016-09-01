@@ -1,15 +1,12 @@
-Vita library version of SimpleJSON.
+Playstation Vita library version of SimpleJSON.
 
 Changes made from MJPA's repository:
  - Removed all wide chars and wide char strings
  - Modified makefile to create an installable static library
 
-make
-make install
+```-lsimpleJSON``` to your project as well as the includes
 
--lsimpleJSON to your project as well as the includes
-
-#include <SimpleJSON/JSON.h>
+```#include <SimpleJSON/JSON.h>```
 
 Original Author: MJPA
 
