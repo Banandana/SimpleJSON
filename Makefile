@@ -21,6 +21,8 @@ clean:
 	rm -rf $(TARGET_LIB) $(OBJS)
 
 install: $(TARGET_LIB)
-	cp $(TARGET_LIB) $(DESTDIR)$(PREFIX)/lib/
-	cp src/JSON.h $(DESTDIR)$(PREFIX)/include/
-	cp src/JSONValue.h $(DESTDIR)$(PREFIX)/include/
+	@mkdir -p $(PREFIX)/lib/
+	@mkdir -p $(PREFIX)/include/SimpleJSON/
+	cp $(TARGET_LIB) $(PREFIX)/lib/
+	cp src/JSON.h $(PREFIX)/include/SimpleJSON/
+	cp src/JSONValue.h $(PREFIX)/include/SimpleJSON/
