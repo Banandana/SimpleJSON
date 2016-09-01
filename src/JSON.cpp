@@ -35,8 +35,7 @@ JSON::JSON()
 }
 
 /**
- * Parses a complete JSON encoded string
- * This is just a wrapper around the UNICODE Parse().
+ * Parses a complete JSON encoded string (UNICODE input version)
  *
  * @access public
  *
@@ -45,44 +44,6 @@ JSON::JSON()
  * @return JSONValue* Returns a JSON Value representing the root, or NULL on error
  */
 JSONValue *JSON::Parse(const char *data)
-{
-	size_t length = strlen(data) + 1;
-	wchar_t *w_data = (wchar_t*)malloc(length * sizeof(wchar_t));
-	
-	#if defined(WIN32) && !defined(__GNUC__)
-		size_t ret_value = 0;
-		if (mbstowcs_s(&ret_value, w_data, length, data, length) != 0)
-		{
-			free(w_data);
-			return NULL;
-		}
-	#elif defined(ANDROID)
-		// mbstowcs seems to misbehave on android
-		for(size_t i = 0; i<length; i++)
-			w_data[i] = (wchar_t)data[i];
-	#else
-		if (mbstowcs(w_data, data, length) == (size_t)-1)
-		{
-			free(w_data);
-			return NULL;
-		}
-	#endif
-	
-	JSONValue *value = JSON::Parse(w_data);
-	free(w_data);
-	return value;
-}
-
-/**
- * Parses a complete JSON encoded string (UNICODE input version)
- *
- * @access public
- *
- * @param wchar_t* data The JSON text
- *
- * @return JSONValue* Returns a JSON Value representing the root, or NULL on error
- */
-JSONValue *JSON::Parse(const wchar_t *data)
 {
 	// Skip any preceding whitespace, end of data = no JSON = fail
 	if (!SkipWhitespace(&data))
@@ -111,14 +72,14 @@ JSONValue *JSON::Parse(const wchar_t *data)
  *
  * @param JSONValue* value The root value
  *
- * @return std::wstring Returns a JSON encoded string representation of the given value
+ * @return std::string Returns a JSON encoded string representation of the given value
  */
-std::wstring JSON::Stringify(const JSONValue *value)
+std::string JSON::Stringify(const JSONValue *value)
 {
 	if (value != NULL)
 		return value->Stringify();
 	else
-		return L"";
+		return "";
 }
 
 /**
@@ -126,13 +87,13 @@ std::wstring JSON::Stringify(const JSONValue *value)
  *
  * @access protected
  *
- * @param wchar_t** data Pointer to a wchar_t* that contains the JSON text
+ * @param char** data Pointer to a char* that contains the JSON text
  *
  * @return bool Returns true if there is more data, or false if the end of the text was reached
  */
-bool JSON::SkipWhitespace(const wchar_t **data)
+bool JSON::SkipWhitespace(const char **data)
 {
-	while (**data != 0 && (**data == L' ' || **data == L'\t' || **data == L'\r' || **data == L'\n'))
+	while (**data != 0 && (**data == ' ' || **data == '\t' || **data == '\r' || **data == '\n'))
 		(*data)++;
 	
 	return **data != 0;
@@ -144,22 +105,22 @@ bool JSON::SkipWhitespace(const wchar_t **data)
  *
  * @access protected
  *
- * @param wchar_t** data Pointer to a wchar_t* that contains the JSON text
- * @param std::wstring& str Reference to a std::wstring to receive the extracted string
+ * @param char** data Pointer to a char* that contains the JSON text
+ * @param std::string& str Reference to a std::string to receive the extracted string
  *
  * @return bool Returns true on success, false on failure
  */
-bool JSON::ExtractString(const wchar_t **data, std::wstring &str)
+bool JSON::ExtractString(const char **data, std::string &str)
 {
-	str = L"";
+	str = "";
 	
 	while (**data != 0)
 	{
 		// Save the char so we can change it if need be
-		wchar_t next_char = **data;
+		char next_char = **data;
 		
 		// Escaping something?
-		if (next_char == L'\\')
+		if (next_char == '\\')
 		{
 			// Move over the escape char
 			(*data)++;
@@ -167,15 +128,15 @@ bool JSON::ExtractString(const wchar_t **data, std::wstring &str)
 			// Deal with the escaped char
 			switch (**data)
 			{
-				case L'"': next_char = L'"'; break;
-				case L'\\': next_char = L'\\'; break;
-				case L'/': next_char = L'/'; break;
-				case L'b': next_char = L'\b'; break;
-				case L'f': next_char = L'\f'; break;
-				case L'n': next_char = L'\n'; break;
-				case L'r': next_char = L'\r'; break;
-				case L't': next_char = L'\t'; break;
-				case L'u':
+				case '"': next_char = '"'; break;
+				case '\\': next_char = '\\'; break;
+				case '/': next_char = '/'; break;
+				case 'b': next_char = '\b'; break;
+				case 'f': next_char = '\f'; break;
+				case 'n': next_char = '\n'; break;
+				case 'r': next_char = '\r'; break;
+				case 't': next_char = '\t'; break;
+				case 'u':
 				{
 					// We need 5 chars (4 hex + the 'u') or its not valid
 					if (!simplejson_wcsnlen(*data, 5))
@@ -214,7 +175,7 @@ bool JSON::ExtractString(const wchar_t **data, std::wstring &str)
 		}
 		
 		// End of the string?
-		else if (next_char == L'"')
+		else if (next_char == '"')
 		{
 			(*data)++;
 			str.reserve(); // Remove unused capacity
@@ -222,7 +183,7 @@ bool JSON::ExtractString(const wchar_t **data, std::wstring &str)
 		}
 		
 		// Disallowed char?
-		else if (next_char < L' ' && next_char != L'\t')
+		else if (next_char < ' ' && next_char != '\t')
 		{
 			// SPEC Violation: Allow tabs due to real world cases
 			return false;
@@ -244,11 +205,11 @@ bool JSON::ExtractString(const wchar_t **data, std::wstring &str)
  *
  * @access protected
  *
- * @param wchar_t** data Pointer to a wchar_t* that contains the JSON text
+ * @param char** data Pointer to a char* that contains the JSON text
  *
  * @return double Returns the double value of the number found
  */
-double JSON::ParseInt(const wchar_t **data)
+double JSON::ParseInt(const char **data)
 {
 	double integer = 0;
 	while (**data != 0 && **data >= '0' && **data <= '9')
@@ -262,11 +223,11 @@ double JSON::ParseInt(const wchar_t **data)
  *
  * @access protected
  *
- * @param wchar_t** data Pointer to a wchar_t* that contains the JSON text
+ * @param char** data Pointer to a char* that contains the JSON text
  *
  * @return double Returns the double value of the decimal found
  */
-double JSON::ParseDecimal(const wchar_t **data)
+double JSON::ParseDecimal(const char **data)
 {
 	double decimal = 0.0;
   double factor = 0.1;
