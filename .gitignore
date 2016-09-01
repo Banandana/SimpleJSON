@@ -2,3 +2,7 @@
 *xcuserdata*
 JSONDemo*
 obj
+
+*.a
+*.o
+*.elf
